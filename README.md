@@ -5,7 +5,11 @@ redis-top - Redis resource statistics tool.
 
 cpanm https://github.com/toritori0318/p5-App-RedisTop/tarball/master
 
-## Commands
+## ScreenShot
+
+<img src="redis_top_screen.png" width="450px" />
+
+## Usage
 
     Usage:
         redis-top [options]
