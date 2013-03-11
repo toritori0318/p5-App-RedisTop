@@ -104,7 +104,7 @@ sub body {
     return $line . $self->separator;
 }
 
-sub avarage {
+sub average {
     my ($self, $values, $instance_count) = @_;
     $values ||= [ map { '' } @{$self->{items}} ];
 
@@ -382,7 +382,7 @@ sub print_average {
     my $out_str = colored(sprintf($format, 'AVERAGE', $self->separator), "bold");
     for my $group (@{$self->{groups}}) {
         my $key   = $group->{group};
-        $out_str .= $group->avarage($self->{summary}->{$key}, $instance_count);
+        $out_str .= $group->average($self->{summary}->{$key}, $instance_count);
     }
     print "$out_str\n";
 }
