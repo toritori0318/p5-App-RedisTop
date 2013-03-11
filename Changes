@@ -1,0 +1,6 @@
+Revision history for Perl extension App::RedisTop.
+
+0.01  Fri Mar  8 14:58:49 2013
+	- original version; created by h2xs 1.23 with options
+		-AX -n App::RedisTop
+

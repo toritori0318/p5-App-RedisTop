@@ -1,0 +1,564 @@
+#!perl
+
+use strict;
+use warnings;
+use IO::Socket;
+use Getopt::Long qw(:config posix_default no_ignore_case gnu_compat);
+use Pod::Usage qw/pod2usage/;
+
+my $version = eval {
+    require 'App::RedisTop';
+    $App::RedisTop::VERSION;
+};
+if($@) { $version = '?' }
+
+#################################
+# Begin Component Class
+#################################
+package Component;
+use Term::ANSIColor qw/colored/;
+
+sub new {}
+sub stat_values {
+    my ($self, $stat) = @_;
+    my @results;
+    for my $row (@{$self->{items}}) {
+        my $stat_key = $row->{stat_key};
+        push @results, $stat->{$stat_key};
+    }
+    return @results;
+}
+
+sub unit {
+    my ($self, $value) = @_;
+    $value ||= 0;
+
+    my $round = '';
+    my @units = qw/K M G T P/;
+    unshift @units, ' ';
+    for my $unit (@units) {
+        if($value / 1000 < 1) {
+            return sprintf("%.${round}f%s", $value, $unit);
+        }
+        $value = $value / 1000;
+        $round = 2;
+    }
+}
+
+sub separator { colored("|", "blue") }
+
+sub header {
+    my ($self) = @_;
+    my $title = $self->{group};
+    my $diff  = $self->component_width - length($title);
+    my $left  = $diff / 2;
+    my $right = $diff - $left;
+
+    my $line     = '-' x $left . $title . '-' x $right;
+    my $line_len = length($line);
+    if($line_len > $self->component_width-1) {
+        $line = substr($line, 0, length($line)-1);
+    } elsif($line_len < $self->component_width-1) {
+        $line .= '-';
+    }
+    return colored("${line} ", "blue");
+}
+
+sub sub_header {
+    my ($self) = @_;
+    my $format = "%" . $self->{width} . "s";
+    my $line   = join(' ', map { sprintf($format, $_->{name}) } @{$self->{items}});
+    return colored("${line}", "cyan") . $self->separator;
+}
+
+sub line {
+    my ($self, $spt) = @_;
+    my $item_len = scalar @{$self->{items}};
+    my $line     = join(' ', map { $spt x $self->{width} } 1..$item_len);
+    return colored("${line} ", "blue");
+}
+
+sub component_width {
+    my ($self) = @_;
+    my $line = $self->line('-');
+    return length($self->colorstrip($self->line('-')));
+}
+
+sub colorstrip {
+    my ($self, @string) = @_;
+    for my $string (@string) {
+        $string =~ s{ \e\[ [\d;]* m }{}xmsg;
+    }
+    return wantarray ? @string : join q{}, @string;
+}
+
+sub body {
+    my ($self, $stat) = @_;
+    my @cols;
+    for my $value ($self->stat_values($stat)) {
+        my $stat   = ($self->{unit}) ? $self->unit($value) : $value;
+        my $format = ($self->{round}) ? "%" . $self->{width} . ".1f" : "%" . $self->{width} . "s" ;
+        push @cols, sprintf($format, $stat);
+    }
+    my $line = join(' ', @cols);
+    return $line . $self->separator;
+}
+
+sub avarage {
+    my ($self, $values, $instance_count) = @_;
+    $values ||= [ map { '' } @{$self->{items}} ];
+
+    my @cols;
+    for my $value (@$values) {
+        my $avg_value = $value / $instance_count if $value && $instance_count;
+
+        my $stat   = ($self->{unit}) ? $self->unit($avg_value) : $avg_value;
+        my $format = ($self->{round}) ? "%" . $self->{width} . ".1f" : "%" . $self->{width} . "s" ;
+        push @cols, sprintf($format, $stat);
+    }
+    my $line = join(' ', @cols);
+    return $line . $self->separator;
+}
+
+sub total {
+    my ($self, $values) = @_;
+
+    my @cols;
+    for my $value (@$values) {
+        my $stat = '';
+        if($self->{total}){
+            $stat = ($self->{unit}) ? $self->unit($value) : $value;
+        }
+        my $format = "%" . $self->{width} . "s";
+        push @cols, sprintf($format, $stat);
+    }
+    my $line = join(' ', @cols);
+    return $line . $self->separator;
+}
+
+#################################
+package CPU;
+use base 'Component';
+sub new {
+    my $class = shift;
+
+    my $self = bless {
+        group => 'cpu',
+        items => [
+            { name => 'sys', stat_key => 'used_cpu_sys', },
+            { name => 'usr', stat_key => 'used_cpu_user', },
+        ],
+        width => 6,
+        round => 1,
+        @_,
+    }, $class;
+}
+
+#################################
+package Memory;
+use base 'Component';
+sub new {
+    my $class = shift;
+
+    my $self = bless {
+        group => 'mem',
+        items => [
+            { name => 'use', stat_key => 'used_memory', },
+            { name => 'rss', stat_key => 'used_memory_rss', },
+        ],
+        width => 7,
+        unit  => 1,
+        @_,
+    }, $class;
+}
+
+#################################
+package Connection;
+use base 'Component';
+sub new {
+    my $class = shift;
+
+    my $self = bless {
+        group => 'conn',
+        items => [
+            { name => 'total',   stat_key => 'total_connections_received', },
+            { name => 'clients', stat_key => 'connected_clients', },
+        ],
+        width => 7,
+        unit  => 1,
+        total => 1,
+        @_,
+    }, $class;
+}
+
+#################################
+package Save;
+use base 'Component';
+sub new {
+    my $class = shift;
+
+    my $self = bless {
+        group => 'save',
+        items => [
+            { name => 'changes', stat_key => 'changes_since_last_save', },
+        ],
+        width => 7,
+        unit  => 1,
+        total => 1,
+        @_,
+    }, $class;
+}
+
+#################################
+package Commands;
+use base 'Component';
+sub new {
+    my $class = shift;
+
+    my $self = bless {
+        group => 'command',
+        items => [
+            { name => 'total',  stat_key => 'total_commands_processed', },
+            { name => 'hits',   stat_key => 'keyspace_hits', },
+            { name => 'misses', stat_key => 'keyspace_misses', },
+        ],
+        width => 7,
+        unit  => 1,
+        total => 1,
+        @_,
+    }, $class;
+}
+
+#################################
+package DB;
+use base 'Component';
+sub new {
+    my $class = shift;
+
+    my $self = bless {
+        group => 'db',
+        items => [
+            { name => 'keys',    stat_key => 'keys', },
+            { name => 'expires', stat_key => 'expires', },
+        ],
+        width => 7,
+        unit  => 1,
+        total => 1,
+        dbid  => 0,
+        @_,
+    }, $class;
+    # set group name
+    $self->{group} = $self->{group} . $self->{dbid};
+    $self;
+}
+
+# override
+sub stat_values {
+    my ($self, $stat) = @_;
+    my @results;
+    my $db_key = "db" . $self->{dbid};
+    my $value  = $stat->{$db_key};
+    my ($keys, $expires) = map {$_ =~ /keys=(\d+),expires=(\d+)/; $1, $2} ($value);
+    return ($keys, $expires);
+}
+#################################
+# End Component Class
+#################################
+
+
+#################################
+# Perform output
+#################################
+package Perform;
+use Term::ANSIColor qw/colored/;
+use List::Util qw/max/;
+
+sub new {
+    my $class = shift;
+
+    my $self = bless {
+        groups    => [],
+        instances => [],
+        width     => 20,
+        summary   => {},
+        width     => 20,
+        @_,
+    }, $class;
+    my $max_len = max (map { length($_) } @{$self->{instances}});
+    $self->{width} = $max_len;
+    $self;
+}
+
+sub separator { colored("|", "blue") }
+
+sub redis_info {
+    my ($self, $host, $port, $pass) = @_;
+
+    my $s = IO::Socket::INET->new(
+        PeerAddr => "$host:$port",
+        Proto    => 'tcp',
+    ) or die "socket connect error: $!";
+
+    # auth
+    if ($pass) {
+        $s->print("AUTH $pass \r\n");
+        <$s> || die "socket auth error: $!";
+    }
+
+    # info
+    $s->print("INFO\r\n");
+    my $count = <$s> || die "socket read error: $!";
+    $s->read(my $buf, substr($count, 1) ) or die "socket read error: $!";
+
+    my $stats = {};
+    for my $row (split(/\r\n/, $buf)) {
+        my ($key, $val) = split(/:/, $row);
+        $stats->{$key} = $val;
+    }
+
+    close ($s);
+
+    return $stats;
+}
+
+sub print_title {
+    print "\033[2J\n";
+    print colored(sprintf("redis-top v%s\n\n", $version), "bold");
+}
+
+sub print_header {
+    my ($self) = @_;
+    my $out_str = sprintf("%s ", ' ' x $self->{width});
+    for my $group (@{$self->{groups}}) {
+        $out_str .= $group->header;
+    }
+    print "$out_str\n";
+}
+
+sub print_sub_header {
+    my ($self) = @_;
+    my $format = "%" . $self->{width} . "s%s";
+    my $out_str = colored(sprintf($format, 'INSTANCE', $self->separator), "bold");
+    for my $group (@{$self->{groups}}) {
+        $out_str .= $group->sub_header;
+    }
+    print "$out_str\n";
+}
+
+sub print_line {
+    my ($self, $spt) = @_;
+    my $out_str = colored(sprintf("%s ", $spt x $self->{width}), "blue");
+    for my $group (@{$self->{groups}}) {
+        $out_str .= $group->line($spt);
+    }
+    print "$out_str\n";
+}
+
+sub print_body {
+    my ($self, $instance, $stats) = @_;
+    my $format = "%" . $self->{width} . "s%s";
+    my $out_str = sprintf($format, $instance, $self->separator);
+    for my $group (@{$self->{groups}}) {
+        $out_str .= $group->body($stats);
+
+        # stash total count
+        my @values = $group->stat_values($stats);
+        my $key    = $group->{group};
+        my $total_values = $self->{summary}->{$key} || [];
+        for (my $i = 0; $i < scalar @values; $i++){
+            $total_values->[$i] ||= 0;
+            $total_values->[$i] += $values[$i];
+        }
+        $self->{summary}->{$key} = $total_values;
+    }
+    print "$out_str\n";
+}
+
+sub print_average {
+    my ($self) = @_;
+    my $instance_count = scalar @{$self->{instances}};
+
+    my $format = "%" . $self->{width} . "s%s";
+    my $out_str = colored(sprintf($format, 'AVERAGE', $self->separator), "bold");
+    for my $group (@{$self->{groups}}) {
+        my $key   = $group->{group};
+        $out_str .= $group->avarage($self->{summary}->{$key}, $instance_count);
+    }
+    print "$out_str\n";
+}
+
+sub print_total {
+    my ($self) = @_;
+    my $format = "%" . $self->{width} . "s%s";
+    my $out_str = colored(sprintf($format, 'TOTAL', $self->separator), "bold");
+    for my $group (@{$self->{groups}}) {
+        my $key   = $group->{group};
+        $out_str .= $group->total($self->{summary}->{$key});
+    }
+    print "$out_str\n";
+}
+
+sub run {
+    my ($self) = @_;
+
+    # print header
+    $self->print_title;
+    $self->print_header;
+    $self->print_sub_header;
+    $self->print_line('-');
+
+    # init total
+    $self->{summary} = {};
+
+    # instances loop
+    foreach my $instance (@{$self->{instances}}) {
+        my ($server, $port) = split(/:/, $instance);
+        my $stats = $self->redis_info($server, $port);
+        $self->print_body($instance, $stats);
+    }
+
+    # average
+    $self->print_line(' ');
+    $self->print_average();
+    # total
+    $self->print_line(' ');
+    $self->print_total();
+}
+
+#################################
+# main
+#################################
+package main;
+
+my %groups = (
+    cpu     => CPU->new(),
+    memory  => Memory->new(),
+    conn    => Connection->new(),
+    save    => Save->new(),
+    command => Commands->new(),
+    db      => DB->new(dbid => 0),
+);
+
+sub main {
+    my $opt = +{};
+
+    GetOptions(
+        'c|cpu'         => \$opt->{cpu},
+        'M|memory'      => \$opt->{memory},
+        'n|conn'        => \$opt->{conn},
+        's|save'        => \$opt->{save},
+        'C|command'     => \$opt->{command},
+        'd|db'          => \$opt->{db},
+        'i|instances=s' => \$opt->{instances},
+        'sleep=i'       => \$opt->{sleep},
+        'nocolor'       => \$opt->{nocolor},
+        'h|help'        => \$opt->{help},
+    );
+
+    pod2usage 1 if $opt->{help};
+
+    my $sleep     = $opt->{sleep} || 3;
+    my @instances = ($opt->{instances}) ? split(/,/, $opt->{instances}) : ('127.0.0.1:6379');
+    $ENV{ANSI_COLORS_DISABLED} = 1 if $opt->{nocolor};
+
+    # group specified
+    my @sp_groups;
+    for my $key (keys %groups) {
+        next unless $opt->{$key};
+
+        push @sp_groups, $groups{$key} if $opt->{$key};
+    }
+
+    # default
+    if(scalar @sp_groups == 0) {
+        push @sp_groups, $groups{$_} for qw/cpu memory conn save command db/;
+    }
+
+    my $perform = Perform->new(
+        groups    => \@sp_groups,
+        instances => \@instances,
+    );
+    while(1) {
+        $perform->run;
+        sleep($sleep);
+    }
+}
+
+main();
+
+__END__
+
+=head1 NAME
+
+redis-top - Redis resource statistics tool.
+
+=head1 DESCRIPTION
+
+Redis resource statistics tool.
+
+=head1 USAGE
+
+redis-top [options]
+
+=head2 Example
+
+=over 4
+
+=item redis-top -i 127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382
+
+=item redis-top --sleep 1 --nocolor --cpu --memory --db
+
+=back
+
+=head1 OPTIONS
+
+=head2 GROUP OPTIONS
+
+=over 4
+
+=item -c,--cpu
+
+enable cpu stats
+
+=item -M,--memory
+
+enable memory stats
+
+=item -n,--conn
+
+enable connection stats
+
+=item -s,--save
+
+enable save stats
+
+=item -C,--command
+
+enable command stats
+
+=item -d,--db
+
+enable db stats (default:db0 stats)
+
+=back
+
+=head2 GLOBAL OPTIONS
+
+=over 4
+
+=item --sleep
+
+sleep time (default:3)
+
+=item --nocolor
+
+disable colors
+
+=item -h --help
+
+show help
+
+=back
+
+=cut
+
