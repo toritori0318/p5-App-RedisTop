@@ -13,6 +13,7 @@ cpanm https://github.com/toritori0318/p5-App-RedisTop/tarball/master
       Example:
         redis-top -i 127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382
         redis-top --sleep 1 --nocolor --cpu --memory --db
+        redis-top -cMnsCd  # full
 
     Options:
       Group Options:
@@ -49,5 +50,4 @@ cpanm https://github.com/toritori0318/p5-App-RedisTop/tarball/master
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
-
 

@@ -8,6 +8,7 @@ WriteMakefile(
         'Getopt::Long'      => '0',
         'Pod::Usage'        => '0',
         'IO::Socket::INET'  => '0',
+        'Test::More'        => '0',
     },
     MIN_PERL_VERSION => '5.008001',
     LICENSE => 'perl',
