@@ -3,8 +3,8 @@
 use strict;
 use warnings;
 use IO::Socket;
-use Getopt::Long qw(:config posix_default no_ignore_case gnu_compat);
-use Pod::Usage qw/pod2usage/;
+use Getopt::Long qw(:config posix_default no_ignore_case gnu_compat bundling);
+use Pod::Usage qw(pod2usage);
 
 my $version = eval {
     require 'App::RedisTop';
@@ -431,12 +431,12 @@ sub run {
 package main;
 
 my %groups = (
-    cpu     => CPU->new(),
-    memory  => Memory->new(),
-    conn    => Connection->new(),
-    save    => Save->new(),
-    command => Commands->new(),
-    db      => DB->new(dbid => 0),
+    cpu     => { class => CPU->new(),         sort => 1, },
+    memory  => { class => Memory->new(),      sort => 2, },
+    conn    => { class => Connection->new(),  sort => 3, },
+    save    => { class => Save->new(),        sort => 4, },
+    command => { class => Commands->new(),    sort => 5, },
+    db      => { class => DB->new(dbid => 0), sort => 6, },
 );
 
 sub main {
@@ -463,15 +463,13 @@ sub main {
 
     # group specified
     my @sp_groups;
-    for my $key (keys %groups) {
-        next unless $opt->{$key};
-
-        push @sp_groups, $groups{$key} if $opt->{$key};
+    for my $key (sort{ $groups{$a}->{'sort'} <=> $groups{$b}->{'sort'}} keys %groups) {
+        push @sp_groups, $groups{$key}->{class} if $opt->{$key};
     }
 
     # default
     if(scalar @sp_groups == 0) {
-        push @sp_groups, $groups{$_} for qw/cpu memory conn save command db/;
+        push @sp_groups, $groups{$_}->{class} for qw/cpu memory conn save command db/;
     }
 
     my $perform = Perform->new(
