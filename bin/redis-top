@@ -20,11 +20,26 @@ use Term::ANSIColor qw/colored/;
 
 sub new {}
 sub stat_values {
-    my ($self, $stat) = @_;
+    my ($self, $stat, $prev_stat) = @_;
     my @results;
     for my $row (@{$self->{items}}) {
         my $stat_key = $row->{stat_key};
-        push @results, $stat->{$stat_key};
+        my $value;
+        if ($row->{diff}) {
+            my $prev_uptime = $prev_stat->{uptime_in_seconds} || 0;
+            my $prev_value  = $prev_stat->{$stat_key} || 0;
+            eval {
+                $value
+                    = ( $stat->{$stat_key} - $prev_value )
+                    / ( $stat->{uptime_in_seconds} - $prev_uptime);
+            };
+            if ($@) {
+                $value = $stat->{$stat_key};
+            }
+        } else {
+            $value = $stat->{$stat_key};
+        }
+        push @results, $value;
     }
     return @results;
 }
@@ -93,9 +108,9 @@ sub colorstrip {
 }
 
 sub body {
-    my ($self, $stat) = @_;
+    my ($self, $stat, $prev_stat) = @_;
     my @cols;
-    for my $value ($self->stat_values($stat)) {
+    for my $value ($self->stat_values($stat, $prev_stat)) {
         my $stat   = ($self->{unit}) ? $self->unit($value) : $value;
         my $format = ($self->{round}) ? "%" . $self->{width} . ".1f" : "%" . $self->{width} . "s" ;
         push @cols, sprintf($format, $stat);
@@ -110,7 +125,8 @@ sub avarage {
 
     my @cols;
     for my $value (@$values) {
-        my $avg_value = $value / $instance_count if $value && $instance_count;
+        my $avg_value = 0;
+        $avg_value = $value / $instance_count if $value && $instance_count;
 
         my $stat   = ($self->{unit}) ? $self->unit($avg_value) : $avg_value;
         my $format = ($self->{round}) ? "%" . $self->{width} . ".1f" : "%" . $self->{width} . "s" ;
@@ -141,12 +157,11 @@ package CPU;
 use base 'Component';
 sub new {
     my $class = shift;
-
     my $self = bless {
         group => 'cpu',
         items => [
-            { name => 'sys', stat_key => 'used_cpu_sys', },
-            { name => 'usr', stat_key => 'used_cpu_user', },
+            { name => 'sys', stat_key => 'used_cpu_sys',  diff => 1 },
+            { name => 'usr', stat_key => 'used_cpu_user', diff => 1 },
         ],
         width => 6,
         round => 1,
@@ -181,10 +196,11 @@ sub new {
     my $self = bless {
         group => 'conn',
         items => [
-            { name => 'total',   stat_key => 'total_connections_received', },
-            { name => 'clients', stat_key => 'connected_clients', },
+            { name => 'total',     stat_key => 'total_connections_received', },
+            { name => 'clients',   stat_key => 'connected_clients', },
+            { name => 'clients/s', stat_key => 'connected_clients', diff => 1 },
         ],
-        width => 7,
+        width => 9,
         unit  => 1,
         total => 1,
         @_,
@@ -218,11 +234,11 @@ sub new {
     my $self = bless {
         group => 'command',
         items => [
-            { name => 'total',  stat_key => 'total_commands_processed', },
-            { name => 'hits',   stat_key => 'keyspace_hits', },
-            { name => 'misses', stat_key => 'keyspace_misses', },
+            { name => 'total/s',  stat_key => 'total_commands_processed', diff => 1 },
+            { name => 'hits/s',   stat_key => 'keyspace_hits',   diff => 1 },
+            { name => 'misses/s', stat_key => 'keyspace_misses', diff => 1 },
         ],
-        width => 7,
+        width => 8,
         unit  => 1,
         total => 1,
         @_,
@@ -277,11 +293,12 @@ sub new {
     my $class = shift;
 
     my $self = bless {
-        groups    => [],
-        instances => [],
-        width     => 20,
-        summary   => {},
-        width     => 20,
+        groups     => [],
+        instances  => [],
+        width      => 20,
+        summary    => {},
+        width      => 20,
+        prev_stats => {},
         @_,
     }, $class;
     my $max_len = max (map { length($_) } @{$self->{instances}});
@@ -355,14 +372,14 @@ sub print_line {
 }
 
 sub print_body {
-    my ($self, $instance, $stats) = @_;
+    my ($self, $instance, $stats, $prev_stats) = @_;
     my $format = "%" . $self->{width} . "s%s";
     my $out_str = sprintf($format, $instance, $self->separator);
     for my $group (@{$self->{groups}}) {
-        $out_str .= $group->body($stats);
+        $out_str .= $group->body($stats, $prev_stats);
 
         # stash total count
-        my @values = $group->stat_values($stats);
+        my @values = $group->stat_values($stats, $prev_stats);
         my $key    = $group->{group};
         my $total_values = $self->{summary}->{$key} || [];
         for (my $i = 0; $i < scalar @values; $i++){
@@ -414,7 +431,12 @@ sub run {
     foreach my $instance (@{$self->{instances}}) {
         my ($server, $port) = split(/:/, $instance);
         my $stats = $self->redis_info($server, $port);
-        $self->print_body($instance, $stats);
+        $self->print_body(
+            $instance,
+            $stats,
+            $self->{prev_stats}->{$instance} || {},
+        );
+        $self->{prev_stats}->{$instance} = $stats;
     }
 
     # average
