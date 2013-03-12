@@ -198,9 +198,8 @@ sub new {
     my $self = bless {
         group => 'conn',
         items => [
-            { name => 'total',     stat_key => 'total_connections_received', },
+            { name => 'total/s',   stat_key => 'total_connections_received', diff => 1 },
             { name => 'clients',   stat_key => 'connected_clients', },
-            { name => 'clients/s', stat_key => 'connected_clients', diff => 1 },
         ],
         width => 9,
         unit  => 1,
