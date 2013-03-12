@@ -320,21 +320,22 @@ sub separator { colored("|", "blue") }
 sub redis_info {
     my ($self, $host, $port, $pass) = @_;
 
+    my $server = "$host:$port";
     my $s = IO::Socket::INET->new(
-        PeerAddr => "$host:$port",
+        PeerAddr => $server,
         Proto    => 'tcp',
-    ) or die "socket connect error: $!";
+    ) or die "[$server] socket connect error: $!";
 
     # auth
     if ($pass) {
         $s->print("AUTH $pass \r\n");
-        <$s> || die "socket auth error: $!";
+        <$s> || die "[$server] socket auth error: $!";
     }
 
     # info
     $s->print("INFO\r\n");
-    my $count = <$s> || die "socket read error: $!";
-    $s->read(my $buf, substr($count, 1) ) or die "socket read error: $!";
+    my $count = <$s> || die "[$server] socket read error: $!";
+    $s->read(my $buf, substr($count, 1) ) or die "[$server] socket read error: $!";
 
     my $stats = {};
     for my $row (split(/\r\n/, $buf)) {
