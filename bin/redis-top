@@ -312,6 +312,8 @@ sub redis_info {
 
     my $stats = {};
     for my $row (split(/\r\n/, $buf)) {
+        next if $row =~ /^#/;
+        next if $row =~ /^$/;
         my ($key, $val) = split(/:/, $row);
         $stats->{$key} = $val;
     }
