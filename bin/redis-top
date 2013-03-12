@@ -7,7 +7,7 @@ use Getopt::Long qw(:config posix_default no_ignore_case gnu_compat bundling);
 use Pod::Usage qw(pod2usage);
 
 my $version = eval {
-    require 'App::RedisTop';
+    require App::RedisTop;
     $App::RedisTop::VERSION;
 };
 if($@) { $version = '?' }
