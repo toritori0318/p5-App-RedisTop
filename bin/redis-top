@@ -539,6 +539,8 @@ redis-top [options]
 
 =item redis-top --sleep 1 --nocolor --cpu --memory --db
 
+=item redis-top -cMnsCd  # full
+
 =back
 
 =head1 OPTIONS
