@@ -23,7 +23,7 @@ sub stat_values {
     my ($self, $stat) = @_;
     my @results;
     for my $row (@{$self->{items}}) {
-        my $stat_key = $row->{stat_key};
+        my $stat_key = ref $row->{stat_key} eq 'CODE' ? $row->{stat_key}->($stat->{redis_version}) : $row->{stat_key};
         push @results, $stat->{$stat_key};
     }
     return @results;
@@ -200,8 +200,16 @@ sub new {
     my $self = bless {
         group => 'save',
         items => [
-            { name => 'changes', stat_key => 'changes_since_last_save', },
-        ],
+            {
+                name     => 'changes',
+                stat_key => sub {
+                    my $redis_version = shift;
+                    return $redis_version =~ /^2\.4/
+                        ? 'changes_since_last_save'
+                        : 'rdb_changes_since_last_save';
+                },
+            },
+           ],
         width => 7,
         unit  => 1,
         total => 1,
