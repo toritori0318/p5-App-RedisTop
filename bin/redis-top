@@ -38,6 +38,7 @@ sub unit {
     unshift @units, ' ';
     for my $unit (@units) {
         if($value / 1000 < 1) {
+            $round = 2 if index($value, '.') > 0; # float
             return sprintf("%.${round}f%s", $value, $unit);
         }
         $value = $value / 1000;
@@ -163,8 +164,9 @@ sub new {
     my $self = bless {
         group => 'mem',
         items => [
-            { name => 'use', stat_key => 'used_memory', },
-            { name => 'rss', stat_key => 'used_memory_rss', },
+            { name => 'use',  stat_key => 'used_memory', },
+            { name => 'rss',  stat_key => 'used_memory_rss', },
+            { name => 'frag', stat_key => 'mem_fragmentation_ratio', },
         ],
         width => 7,
         unit  => 1,
