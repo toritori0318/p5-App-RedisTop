@@ -282,7 +282,7 @@ sub stat_values {
     my ($self, $stat) = @_;
     my @results;
     my $db_key = "db" . $self->{dbid};
-    my $value  = $stat->{$db_key};
+    my $value  = $stat->{$db_key} || "keys=0,expires=0";
     my ($keys, $expires) = map {$_ =~ /keys=(\d+),expires=(\d+)/; $1, $2} ($value);
     return ($keys, $expires);
 }
