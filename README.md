@@ -3,7 +3,12 @@ redis-top - Redis resource statistics tool.
 
 ## Installation
 
-cpanm https://github.com/toritori0318/p5-App-RedisTop/tarball/master
+    cpanm https://github.com/toritori0318/p5-App-RedisTop/tarball/master
+
+or
+
+    curl -L -o redis-top http://p.tl/d4aP
+    perl redis-top
 
 ## ScreenShot
 
@@ -53,5 +58,6 @@ cpanm https://github.com/toritori0318/p5-App-RedisTop/tarball/master
 ## License
 
 This library is free software; you can redistribute it and/or modify
+
 it under the same terms as Perl itself.
 
