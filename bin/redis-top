@@ -15,7 +15,7 @@ if($@) { $version = '?' }
 #################################
 # Begin Component Class
 #################################
-package Component;
+package App::RedisTop::Component;
 use Term::ANSIColor qw/colored/;
 
 sub new {}
@@ -154,8 +154,8 @@ sub total {
 }
 
 #################################
-package CPU;
-use base 'Component';
+package App::RedisTop::Component::CPU;
+use base 'App::RedisTop::Component';
 sub new {
     my $class = shift;
     my $self = bless {
@@ -171,8 +171,8 @@ sub new {
 }
 
 #################################
-package Memory;
-use base 'Component';
+package App::RedisTop::Component::Memory;
+use base 'App::RedisTop::Component';
 sub new {
     my $class = shift;
 
@@ -190,8 +190,8 @@ sub new {
 }
 
 #################################
-package Connection;
-use base 'Component';
+package App::RedisTop::Component::Connection;
+use base 'App::RedisTop::Component';
 sub new {
     my $class = shift;
 
@@ -209,8 +209,8 @@ sub new {
 }
 
 #################################
-package Save;
-use base 'Component';
+package App::RedisTop::Component::Save;
+use base 'App::RedisTop::Component';
 sub new {
     my $class = shift;
 
@@ -235,8 +235,8 @@ sub new {
 }
 
 #################################
-package Commands;
-use base 'Component';
+package App::RedisTop::Component::Commands;
+use base 'App::RedisTop::Component';
 sub new {
     my $class = shift;
 
@@ -255,8 +255,8 @@ sub new {
 }
 
 #################################
-package DB;
-use base 'Component';
+package App::RedisTop::Component::DB;
+use base 'App::RedisTop::Component';
 sub new {
     my $class = shift;
 
@@ -294,7 +294,7 @@ sub stat_values {
 #################################
 # Perform output
 #################################
-package Perform;
+package App::RedisTop::Perform;
 use Term::ANSIColor qw/colored/;
 use List::Util qw/max/;
 
@@ -465,12 +465,12 @@ sub run {
 package main;
 
 my %groups = (
-    cpu     => { class => CPU->new(),         sort => 1, },
-    memory  => { class => Memory->new(),      sort => 2, },
-    conn    => { class => Connection->new(),  sort => 3, },
-    save    => { class => Save->new(),        sort => 4, },
-    command => { class => Commands->new(),    sort => 5, },
-    db      => { class => DB->new(dbid => 0), sort => 6, },
+    cpu     => { class => App::RedisTop::Component::CPU->new(),         sort => 1, },
+    memory  => { class => App::RedisTop::Component::Memory->new(),      sort => 2, },
+    conn    => { class => App::RedisTop::Component::Connection->new(),  sort => 3, },
+    save    => { class => App::RedisTop::Component::Save->new(),        sort => 4, },
+    command => { class => App::RedisTop::Component::Commands->new(),    sort => 5, },
+    db      => { class => App::RedisTop::Component::DB->new(dbid => 0), sort => 6, },
 );
 
 sub main {
@@ -506,7 +506,7 @@ sub main {
         push @sp_groups, $groups{$_}->{class} for qw/cpu memory conn save command db/;
     }
 
-    my $perform = Perform->new(
+    my $perform = App::RedisTop::Perform->new(
         groups    => \@sp_groups,
         instances => \@instances,
     );
