@@ -350,40 +350,42 @@ sub redis_info {
     return $stats;
 }
 
-sub print_title {
-    print "\033[2J\n";
-    print colored(sprintf("redis-top v%s\n\n", $version), "bold");
+sub build_title {
+    my @lines;
+    push @lines, "\033[2J\n";
+    push @lines, colored(sprintf("redis-top v%s\n\n", $version), "bold");
+    return @lines;
 }
 
-sub print_header {
+sub build_header {
     my ($self) = @_;
     my $out_str = sprintf("%s ", ' ' x $self->{width});
     for my $group (@{$self->{groups}}) {
         $out_str .= $group->header;
     }
-    print "$out_str\n";
+    return ("$out_str\n");
 }
 
-sub print_sub_header {
+sub build_sub_header {
     my ($self) = @_;
     my $format = "%" . $self->{width} . "s%s";
     my $out_str = colored(sprintf($format, 'INSTANCE', $self->separator), "bold");
     for my $group (@{$self->{groups}}) {
         $out_str .= $group->sub_header;
     }
-    print "$out_str\n";
+    return ("$out_str\n");
 }
 
-sub print_line {
+sub build_line {
     my ($self, $spt) = @_;
     my $out_str = colored(sprintf("%s ", $spt x $self->{width}), "blue");
     for my $group (@{$self->{groups}}) {
         $out_str .= $group->line($spt);
     }
-    print "$out_str\n";
+    return ("$out_str\n");
 }
 
-sub print_body {
+sub build_body {
     my ($self, $instance, $stats, $prev_stats) = @_;
     my $format = "%" . $self->{width} . "s%s";
     my $out_str = sprintf($format, $instance, $self->separator);
@@ -400,10 +402,10 @@ sub print_body {
         }
         $self->{summary}->{$key} = $total_values;
     }
-    print "$out_str\n";
+    return ("$out_str\n");
 }
 
-sub print_average {
+sub build_average {
     my ($self) = @_;
     my $instance_count = scalar @{$self->{instances}};
 
@@ -413,10 +415,10 @@ sub print_average {
         my $key   = $group->{group};
         $out_str .= $group->average($self->{summary}->{$key}, $instance_count);
     }
-    print "$out_str\n";
+    return ("$out_str\n");
 }
 
-sub print_total {
+sub build_total {
     my ($self) = @_;
     my $format = "%" . $self->{width} . "s%s";
     my $out_str = colored(sprintf($format, 'TOTAL', $self->separator), "bold");
@@ -424,26 +426,27 @@ sub print_total {
         my $key   = $group->{group};
         $out_str .= $group->total($self->{summary}->{$key});
     }
-    print "$out_str\n";
+    return ("$out_str\n");
 }
 
 sub run {
     my ($self) = @_;
 
-    # print header
-    $self->print_title;
-    $self->print_header;
-    $self->print_sub_header;
-    $self->print_line('-');
-
     # init total
     $self->{summary} = {};
+
+    my @lines;
+    # build header
+    push @lines, $self->build_title;
+    push @lines, $self->build_header;
+    push @lines, $self->build_sub_header;
+    push @lines, $self->build_line('-');
 
     # instances loop
     foreach my $instance (@{$self->{instances}}) {
         my ($server, $port) = split(/:/, $instance);
         my $stats = $self->redis_info($server, $port);
-        $self->print_body(
+        push @lines, $self->build_body(
             $instance,
             $stats,
             $self->{prev_stats}->{$instance} || {},
@@ -452,11 +455,13 @@ sub run {
     }
 
     # average
-    $self->print_line(' ');
-    $self->print_average();
+    push @lines, $self->build_line(' ');
+    push @lines, $self->build_average();
     # total
-    $self->print_line(' ');
-    $self->print_total();
+    push @lines, $self->build_line(' ');
+    push @lines, $self->build_total();
+
+    print join('', @lines);
 }
 
 #################################
