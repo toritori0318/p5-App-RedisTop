@@ -20,7 +20,7 @@ Tsuyoshi Torii E<lt>toritori0318(at)cpan.orgE<gt>
 
 =head1 SEE ALSO
 
-redis-top
+L<redis-top>
 
 =head1 THANKS TO
 
