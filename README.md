@@ -7,7 +7,7 @@ redis-top - Redis resource statistics tool.
 
 or
 
-    curl -L -o redis-top http://p.tl/d4aP
+    curl -L -o redis-top http://p.tl/Vn90
     perl redis-top
 
 ## ScreenShot
