@@ -3,7 +3,7 @@ redis-top - Redis resource statistics tool.
 
 ## Installation
 
-    cpanm https://github.com/toritori0318/p5-App-RedisTop/tarball/master
+    cpanm App::RedisTop
 
 or
 

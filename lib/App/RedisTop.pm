@@ -16,7 +16,7 @@ Redis resource statistics tool.
 
 =head1 AUTHOR
 
-Tsuyoshi Torii E<lt>toritori0318(at)cpan.orgE<gt>
+Tsuyoshi Torii E<lt>toritsuyo(at)cpan.orgE<gt>
 
 =head1 SEE ALSO
 
