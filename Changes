@@ -1,5 +1,8 @@
 Revision history for Perl extension App::RedisTop.
 
+0.02  2013/03/21
+  - Fix test failure.
+
 0.01  2013/03/12
   - Fix printing is out of position after refreshing.
   - Friendly error message.

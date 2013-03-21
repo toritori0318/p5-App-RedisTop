@@ -1,7 +1,6 @@
 use strict;
-
 use Test::More;
-use IO::String;
+
 use App::RedisTop::Component::CPU;
 use App::RedisTop::Component::Memory;
 use App::RedisTop::Component::Connection;
