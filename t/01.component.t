@@ -3,16 +3,19 @@ use Test::More;
 
 use App::RedisTop::Component::CPU;
 use App::RedisTop::Component::Memory;
+use App::RedisTop::Component::MemoryPer;
 use App::RedisTop::Component::Connection;
+use App::RedisTop::Component::ConnectionPer;
 use App::RedisTop::Component::Save;
 use App::RedisTop::Component::Command;
+use App::RedisTop::Component::Slowlog;
 use App::RedisTop::Component::DB;
 
 my $test_stats = {
    'bgsave_in_progress'         => 0,
    'blocked_clients'            => 0,
    'changes_since_last_save'    => 3,
-   'connected_clients'          => 4,
+   'connected_clients'          => 40,
    'connected_slaves'           => 0,
    'db0'                        => 'keys=55,expires=21',
    'evicted_keys'               => 0,
@@ -34,13 +37,14 @@ my $test_stats = {
    'used_memory'                => 952160,
    'used_memory_peak'           => 953568,
    'used_memory_rss'            => 1341088,
+   'slowlog_len'                => 12,
 };
 
 my $test_prev_stats = {
    'bgsave_in_progress'         => 0,
    'blocked_clients'            => 0,
    'changes_since_last_save'    => 0,
-   'connected_clients'          => 1,
+   'connected_clients'          => 10,
    'connected_slaves'           => 0,
    'db0'                        => 'keys=5,expires=0',
    'evicted_keys'               => 0,
@@ -62,6 +66,12 @@ my $test_prev_stats = {
    'used_memory'                => 932160,
    'used_memory_peak'           => 923568,
    'used_memory_rss'            => 1241088,
+   'slowlog_len'                => 12,
+};
+
+my $test_config = {
+   'maxmemory'  => 3000000,
+   'maxclients' => 300,
 };
 
 my %groups = (
@@ -81,12 +91,28 @@ my %groups = (
             body       => "952.16K   1.34M   1.33 \e[34m|\e[0m",
         },
     },
+    memoryper => {
+        class => App::RedisTop::Component::MemoryPer->new(),
+        test  => {
+            header     => "\e[34m-memper- \e[0m",
+            sub_header => "\e[36m use/max\e[0m\e[34m|\e[0m",
+            body       => "   31.74\e[34m|\e[0m",
+        },
+    },
     conn => {
         class => App::RedisTop::Component::Connection->new(),
         test  => {
             header     => "\e[34m--------conn------- \e[0m",
             sub_header => "\e[36m  total/s   clients\e[0m\e[34m|\e[0m",
-            body       => "       5         4 \e[34m|\e[0m",
+            body       => "       5        40 \e[34m|\e[0m",
+        },
+    },
+    connper => {
+        class => App::RedisTop::Component::ConnectionPer->new(),
+        test  => {
+            header     => "\e[34m-connper- \e[0m",
+            sub_header => "\e[36m conn/max\e[0m\e[34m|\e[0m",
+            body       => "    13.33\e[34m|\e[0m",
         },
     },
     save => {
@@ -105,6 +131,14 @@ my %groups = (
             body       => "      8        3        5 \e[34m|\e[0m",
         },
     },
+    slowlog => {
+        class => App::RedisTop::Component::Slowlog->new(),
+        test  => {
+            header     => "\e[34m-slowlog- \e[0m",
+            sub_header => "\e[36m  slowlog\e[0m\e[34m|\e[0m",
+            body       => "      12 \e[34m|\e[0m",
+        },
+    },
     db => {
         class => App::RedisTop::Component::DB->new(dbid => 0),
         test  => {
@@ -116,6 +150,7 @@ my %groups = (
 );
 # test
 for my $key (keys %groups) {
+    $groups{$key}->{class}->redis_config($test_config);
     my $header = $groups{$key}->{class}->header;
     is($header, $groups{$key}->{test}->{header}, "[$key] header ok");
     my $sub_header = $groups{$key}->{class}->sub_header;
