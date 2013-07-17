@@ -1,6 +1,7 @@
 package App::RedisTop::Perform;
 use Term::ANSIColor qw/colored/;
 use List::Util qw/max/;
+use App::RedisTop::Redis;
 
 my $version = eval {
     require App::RedisTop;
@@ -25,39 +26,6 @@ sub new {
 }
 
 sub separator { colored("|", "blue") }
-
-sub redis_info {
-    my ($self, $host, $port, $pass) = @_;
-
-    my $server = "$host:$port";
-    my $s = IO::Socket::INET->new(
-        PeerAddr => $server,
-        Proto    => 'tcp',
-    ) or die "[$server] socket connect error: $!";
-
-    # auth
-    if ($pass) {
-        $s->print("AUTH $pass \r\n");
-        <$s> || die "[$server] socket auth error: $!";
-    }
-
-    # info
-    $s->print("INFO\r\n");
-    my $count = <$s> || die "[$server] socket read error: $!";
-    $s->read(my $buf, substr($count, 1) ) or die "[$server] socket read error: $!";
-
-    my $stats = {};
-    for my $row (split(/\r\n/, $buf)) {
-        next if $row =~ /^#/;
-        next if $row =~ /^$/;
-        my ($key, $val) = split(/:/, $row);
-        $stats->{$key} = $val;
-    }
-
-    close ($s);
-
-    return $stats;
-}
 
 sub build_title {
     my @lines;
@@ -95,10 +63,11 @@ sub build_line {
 }
 
 sub build_body {
-    my ($self, $instance, $stats, $prev_stats) = @_;
+    my ($self, $instance, $stats, $prev_stats, $redis_config) = @_;
     my $format = "%" . $self->{width} . "s%s";
     my $out_str = sprintf($format, $instance, $self->separator);
     for my $group (@{$self->{groups}}) {
+        $group->redis_config($redis_config);
         $out_str .= $group->body($stats, $prev_stats);
 
         # stash total count
@@ -153,12 +122,16 @@ sub run {
 
     # instances loop
     foreach my $instance (@{$self->{instances}}) {
-        my ($server, $port) = split(/:/, $instance);
-        my $stats = $self->redis_info($server, $port);
+        my ($host, $port) = split(/:/, $instance);
+
+        my $redis  = App::RedisTop::Redis->new(host => $host, port => $port);
+        my $config = $redis->config();
+        my $stats  = $redis->info();
         push @lines, $self->build_body(
             $instance,
             $stats,
             $self->{prev_stats}->{$instance} || {},
+            $config,
         );
         $self->{prev_stats}->{$instance} = $stats;
     }

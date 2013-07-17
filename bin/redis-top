@@ -9,7 +9,9 @@ use Pod::Usage qw(pod2usage);
 use App::RedisTop::Perform;
 use App::RedisTop::Component::CPU;
 use App::RedisTop::Component::Memory;
+use App::RedisTop::Component::MemoryPer;
 use App::RedisTop::Component::Connection;
+use App::RedisTop::Component::ConnectionPer;
 use App::RedisTop::Component::Save;
 use App::RedisTop::Component::Command;
 use App::RedisTop::Component::DB;
@@ -20,12 +22,14 @@ use App::RedisTop::Component::DB;
 package main;
 
 my %groups = (
-    cpu     => { class => App::RedisTop::Component::CPU->new(),         sort => 1, },
-    memory  => { class => App::RedisTop::Component::Memory->new(),      sort => 2, },
-    conn    => { class => App::RedisTop::Component::Connection->new(),  sort => 3, },
-    save    => { class => App::RedisTop::Component::Save->new(),        sort => 4, },
-    command => { class => App::RedisTop::Component::Command->new(),     sort => 5, },
-    db      => { class => App::RedisTop::Component::DB->new(dbid => 0), sort => 6, },
+    cpu       => { class => App::RedisTop::Component::CPU->new(),           sort => 1, },
+    memory    => { class => App::RedisTop::Component::Memory->new(),        sort => 2, },
+    memoryper => { class => App::RedisTop::Component::MemoryPer->new(),     sort => 3, },
+    conn      => { class => App::RedisTop::Component::Connection->new(),    sort => 4, },
+    connper   => { class => App::RedisTop::Component::ConnectionPer->new(), sort => 5, },
+    save      => { class => App::RedisTop::Component::Save->new(),          sort => 6, },
+    command   => { class => App::RedisTop::Component::Command->new(),       sort => 7, },
+    db        => { class => App::RedisTop::Component::DB->new(dbid => 0),   sort => 8, },
 );
 
 sub main {
@@ -34,7 +38,9 @@ sub main {
     GetOptions(
         'c|cpu'         => \$opt->{cpu},
         'M|memory'      => \$opt->{memory},
+        'm|memoryper'   => \$opt->{memoryper},
         'n|conn'        => \$opt->{conn},
+        'o|connper'     => \$opt->{connper},
         's|save'        => \$opt->{save},
         'C|command'     => \$opt->{command},
         'd|db'          => \$opt->{db},
@@ -95,7 +101,7 @@ redis-top [options]
 
 =item redis-top --sleep 1 --nocolor --cpu --memory --db
 
-=item redis-top -cMnsCd  # full
+=item redis-top -cMnsCdmo  # full
 
 =back
 
@@ -113,9 +119,17 @@ enable cpu stats
 
 enable memory stats
 
+=item -m,--memoryper
+
+enable used_memory/maxmemory stats
+
 =item -n,--conn
 
 enable connection stats
+
+=item -o,--connper
+
+enable connected_clients/maxclients stats
 
 =item -s,--save
 

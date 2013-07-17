@@ -1,5 +1,9 @@
 Revision history for Perl extension App::RedisTop.
 
+0.03  2013/07/17
+  - Add UsedMemory / MaxMemory
+  - Add Connection / MaxClient
+
 0.02  2013/03/21
   - Fix test failure.
 
