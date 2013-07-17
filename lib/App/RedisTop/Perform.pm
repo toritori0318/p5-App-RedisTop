@@ -124,9 +124,13 @@ sub run {
     foreach my $instance (@{$self->{instances}}) {
         my ($host, $port) = split(/:/, $instance);
 
-        my $redis  = App::RedisTop::Redis->new(host => $host, port => $port);
-        my $config = $redis->config();
-        my $stats  = $redis->info();
+        my $redis   = App::RedisTop::Redis->new(host => $host, port => $port);
+        my $config  = $redis->config();
+        my $stats   = $redis->info();
+        my $slowlog = $redis->slowlog();
+        # add slowlog len into stats
+        $stats->{slowlog_len} = $slowlog;
+
         push @lines, $self->build_body(
             $instance,
             $stats,

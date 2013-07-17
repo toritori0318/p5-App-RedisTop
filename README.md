@@ -22,7 +22,7 @@ or
       Example:
         redis-top -i 127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382
         redis-top --sleep 1 --nocolor --cpu --memory --db
-        redis-top -cMnsCdmo # full
+        redis-top -cMnsCdmol # full
 
     Options:
       Group Options:
@@ -46,6 +46,9 @@ or
 
         -C,--command
             enable command stats
+
+        -l,--slowlog
+            enable slowlog stats
 
         -d,--db
             enable db stats (default:db0 stats)

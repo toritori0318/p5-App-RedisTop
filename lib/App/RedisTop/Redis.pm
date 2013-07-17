@@ -48,10 +48,13 @@ sub info {
 
 sub config {
     my ($self) = @_;
-
     return $self->command("CONFIG", "GET", "*");
 }
 
+sub slowlog {
+    my ($self) = @_;
+    return $self->command("SLOWLOG", "LEN");
+}
 
 sub command {
     my ($self, @command) = @_;
@@ -65,6 +68,7 @@ sub command {
     my @lines = split(/\r\n/, $buffer);
     my $header = $self->row_parser($lines[0]);
     return $buffer if $header->{type} eq 'itemlen';
+    return $header->{value} if $header->{type} eq 'number';
 
     my %stats = ();
     my $key;
@@ -87,7 +91,7 @@ sub command {
 sub row_parser {
     my ($self, $row) = @_;
 
-    if($row =~ /^(\*|\$)+(\w+)/) {
+    if($row =~ /^(\*|\$|\:)+(\w+)/) {
         if($1 eq '*') { # header
             return {
                 type  => 'rowlen',
@@ -96,6 +100,11 @@ sub row_parser {
         } elsif($1 eq '$') { # next length
             return {
                 type  => 'itemlen',
+                value => $2,
+            };
+        } elsif($1 eq ':') { # number
+            return {
+                type  => 'number',
                 value => $2,
             };
         }

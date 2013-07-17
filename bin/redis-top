@@ -14,6 +14,7 @@ use App::RedisTop::Component::Connection;
 use App::RedisTop::Component::ConnectionPer;
 use App::RedisTop::Component::Save;
 use App::RedisTop::Component::Command;
+use App::RedisTop::Component::Slowlog;
 use App::RedisTop::Component::DB;
 
 #################################
@@ -29,7 +30,8 @@ my %groups = (
     connper   => { class => App::RedisTop::Component::ConnectionPer->new(), sort => 5, },
     save      => { class => App::RedisTop::Component::Save->new(),          sort => 6, },
     command   => { class => App::RedisTop::Component::Command->new(),       sort => 7, },
-    db        => { class => App::RedisTop::Component::DB->new(dbid => 0),   sort => 8, },
+    slowlog   => { class => App::RedisTop::Component::Slowlog->new(),       sort => 8, },
+    db        => { class => App::RedisTop::Component::DB->new(dbid => 0),   sort => 9, },
 );
 
 sub main {
@@ -43,6 +45,7 @@ sub main {
         'o|connper'     => \$opt->{connper},
         's|save'        => \$opt->{save},
         'C|command'     => \$opt->{command},
+        'l|slowlog'     => \$opt->{slowlog},
         'd|db'          => \$opt->{db},
         'i|instances=s' => \$opt->{instances},
         'sleep=i'       => \$opt->{sleep},
@@ -101,7 +104,7 @@ redis-top [options]
 
 =item redis-top --sleep 1 --nocolor --cpu --memory --db
 
-=item redis-top -cMnsCdmo  # full
+=item redis-top -cMnsCdmol  # full
 
 =back
 
@@ -138,6 +141,10 @@ enable save stats
 =item -C,--command
 
 enable command stats
+
+=item -l,--slowlog
+
+enable slowlog stats
 
 =item -d,--db
 
