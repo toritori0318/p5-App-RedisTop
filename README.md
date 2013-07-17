@@ -22,7 +22,7 @@ or
       Example:
         redis-top -i 127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382
         redis-top --sleep 1 --nocolor --cpu --memory --db
-        redis-top -cMnsCd  # full
+        redis-top -cMnsCdmo # full
 
     Options:
       Group Options:
@@ -32,8 +32,14 @@ or
         -M,--memory
             enable memory stats
 
+        -m,--memoryper
+            enable used_memory/maxmemory stats
+
         -n,--conn
             enable connection stats
+
+        -o,--connper
+            enable connected_clients/maxclients stats
 
         -s,--save
             enable save stats
