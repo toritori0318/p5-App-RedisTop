@@ -12,12 +12,17 @@ if($@) { $version = '?' }
 sub new {
     my $class = shift;
 
+    my ($rows, $cols) = qx{stty -F /dev/tty size} =~ /^(\d+)\s+(\d+)/;
+
     my $self = bless {
         groups     => [],
         instances  => [],
         width      => 20,
         summary    => {},
         prev_stats => {},
+        displayed  => 0,
+        rows       => $rows,
+        cols       => $cols,
         @_,
     }, $class;
     my $max_len = max (map { length($_) } @{$self->{instances}});
@@ -28,10 +33,7 @@ sub new {
 sub separator { colored("|", "blue") }
 
 sub build_title {
-    my @lines;
-    push @lines, "\033[2J\n";
-    push @lines, colored(sprintf("redis-top v%s\n\n", $version), "bold");
-    return @lines;
+    return ();
 }
 
 sub build_header {
@@ -114,11 +116,13 @@ sub run {
     $self->{summary} = {};
 
     my @lines;
-    # build header
-    push @lines, $self->build_title;
-    push @lines, $self->build_header;
-    push @lines, $self->build_sub_header;
-    push @lines, $self->build_line('-');
+    if ($self->{displayed} == 0) {
+        # build header
+        push @lines, $self->build_title;
+        push @lines, $self->build_header;
+        push @lines, $self->build_sub_header;
+        push @lines, $self->build_line('-');
+    }
 
     # instances loop
     foreach my $instance (@{$self->{instances}}) {
@@ -140,14 +144,18 @@ sub run {
         $self->{prev_stats}->{$instance} = $stats;
     }
 
-    # average
-    push @lines, $self->build_line(' ');
-    push @lines, $self->build_average();
-    # total
-    push @lines, $self->build_line(' ');
-    push @lines, $self->build_total();
+    if ($self->{displayed} == 0) {
+        # average
+        push @lines, $self->build_average();
+        # total
+        push @lines, $self->build_total();
+    }
 
     print join('', @lines);
+    $self->{displayed} += scalar(@lines);
+    if ($self->{displayed} >= $self->{rows}) {
+        $self->{displayed} = 0;
+    }
 }
 
 1;
