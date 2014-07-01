@@ -12,7 +12,8 @@ if($@) { $version = '?' }
 sub new {
     my $class = shift;
 
-    my ($rows, $cols) = qx{stty -F /dev/tty size} =~ /^(\d+)\s+(\d+)/;
+    chomp(my $rows = qx{tput lines});
+    $rows ||= 24;
 
     my $self = bless {
         groups     => [],
@@ -22,7 +23,6 @@ sub new {
         prev_stats => {},
         displayed  => 0,
         rows       => $rows,
-        cols       => $cols,
         @_,
     }, $class;
     my $max_len = max (map { length($_) } @{$self->{instances}});
