@@ -41,6 +41,8 @@ sub stat_values {
             } else {
                 $value = "-1";
             }
+        } elsif($row->{data}) {
+            $value = $row->{data}->();
         } else {
             $value = $stat->{$stat_key};
         }

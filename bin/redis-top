@@ -6,6 +6,7 @@ use IO::Socket;
 use Getopt::Long qw(:config posix_default no_ignore_case gnu_compat bundling);
 use Pod::Usage qw(pod2usage);
 
+use App::RedisTop::Component::Time;
 use App::RedisTop::Component::CPU;
 use App::RedisTop::Component::Memory;
 use App::RedisTop::Component::MemoryPer;
@@ -22,21 +23,23 @@ use App::RedisTop::Component::DB;
 package main;
 
 my %groups = (
-    cpu       => { class => App::RedisTop::Component::CPU->new(),           sort => 1, },
-    memory    => { class => App::RedisTop::Component::Memory->new(),        sort => 2, },
-    memoryper => { class => App::RedisTop::Component::MemoryPer->new(),     sort => 3, },
-    conn      => { class => App::RedisTop::Component::Connection->new(),    sort => 4, },
-    connper   => { class => App::RedisTop::Component::ConnectionPer->new(), sort => 5, },
-    save      => { class => App::RedisTop::Component::Save->new(),          sort => 6, },
-    command   => { class => App::RedisTop::Component::Command->new(),       sort => 7, },
-    slowlog   => { class => App::RedisTop::Component::Slowlog->new(),       sort => 8, },
-    db        => { class => App::RedisTop::Component::DB->new(dbid => 0),   sort => 9, },
+    time      => { class => App::RedisTop::Component::Time->new(),          sort => 1, },
+    cpu       => { class => App::RedisTop::Component::CPU->new(),           sort => 2, },
+    memory    => { class => App::RedisTop::Component::Memory->new(),        sort => 3, },
+    memoryper => { class => App::RedisTop::Component::MemoryPer->new(),     sort => 4, },
+    conn      => { class => App::RedisTop::Component::Connection->new(),    sort => 5, },
+    connper   => { class => App::RedisTop::Component::ConnectionPer->new(), sort => 6, },
+    save      => { class => App::RedisTop::Component::Save->new(),          sort => 7, },
+    command   => { class => App::RedisTop::Component::Command->new(),       sort => 8, },
+    slowlog   => { class => App::RedisTop::Component::Slowlog->new(),       sort => 9, },
+    db        => { class => App::RedisTop::Component::DB->new(dbid => 0),   sort => 10, },
 );
 
 sub main {
     my $opt = +{};
 
     GetOptions(
+        't|time'        => \$opt->{time},
         'c|cpu'         => \$opt->{cpu},
         'M|memory'      => \$opt->{memory},
         'm|memoryper'   => \$opt->{memoryper},
@@ -159,6 +162,10 @@ enable slowlog stats
 =item -d,--db
 
 enable db stats (default:db0 stats)
+
+=item -t,--time
+
+enable time output
 
 =back
 
