@@ -6,7 +6,7 @@
 BEGIN {
 my %fatpacked;
 
-$fatpacked{"App/RedisTop.pm"} = <<'APP_REDISTOP';
+$fatpacked{"App/RedisTop.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP';
   package App::RedisTop;
   use strict;
   use warnings;
@@ -45,7 +45,7 @@ $fatpacked{"App/RedisTop.pm"} = <<'APP_REDISTOP';
   =cut
 APP_REDISTOP
 
-$fatpacked{"App/RedisTop/Component.pm"} = <<'APP_REDISTOP_COMPONENT';
+$fatpacked{"App/RedisTop/Component.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT';
   package App::RedisTop::Component;
   use Term::ANSIColor qw/colored/;
   
@@ -89,6 +89,8 @@ $fatpacked{"App/RedisTop/Component.pm"} = <<'APP_REDISTOP_COMPONENT';
               } else {
                   $value = "-1";
               }
+          } elsif($row->{data}) {
+              $value = $row->{data}->();
           } else {
               $value = $stat->{$stat_key};
           }
@@ -209,7 +211,7 @@ $fatpacked{"App/RedisTop/Component.pm"} = <<'APP_REDISTOP_COMPONENT';
   1;
 APP_REDISTOP_COMPONENT
 
-$fatpacked{"App/RedisTop/Component/CPU.pm"} = <<'APP_REDISTOP_COMPONENT_CPU';
+$fatpacked{"App/RedisTop/Component/CPU.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_CPU';
   package App::RedisTop::Component::CPU;
   use base 'App::RedisTop::Component';
   sub new {
@@ -229,7 +231,7 @@ $fatpacked{"App/RedisTop/Component/CPU.pm"} = <<'APP_REDISTOP_COMPONENT_CPU';
   1;
 APP_REDISTOP_COMPONENT_CPU
 
-$fatpacked{"App/RedisTop/Component/Command.pm"} = <<'APP_REDISTOP_COMPONENT_COMMAND';
+$fatpacked{"App/RedisTop/Component/Command.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_COMMAND';
   package App::RedisTop::Component::Command;
   use base 'App::RedisTop::Component';
   sub new {
@@ -252,7 +254,7 @@ $fatpacked{"App/RedisTop/Component/Command.pm"} = <<'APP_REDISTOP_COMPONENT_COMM
   1;
 APP_REDISTOP_COMPONENT_COMMAND
 
-$fatpacked{"App/RedisTop/Component/Connection.pm"} = <<'APP_REDISTOP_COMPONENT_CONNECTION';
+$fatpacked{"App/RedisTop/Component/Connection.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_CONNECTION';
   package App::RedisTop::Component::Connection;
   use base 'App::RedisTop::Component';
   sub new {
@@ -274,7 +276,7 @@ $fatpacked{"App/RedisTop/Component/Connection.pm"} = <<'APP_REDISTOP_COMPONENT_C
   1;
 APP_REDISTOP_COMPONENT_CONNECTION
 
-$fatpacked{"App/RedisTop/Component/ConnectionPer.pm"} = <<'APP_REDISTOP_COMPONENT_CONNECTIONPER';
+$fatpacked{"App/RedisTop/Component/ConnectionPer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_CONNECTIONPER';
   package App::RedisTop::Component::ConnectionPer;
   use base 'App::RedisTop::Component';
   sub new {
@@ -294,7 +296,7 @@ $fatpacked{"App/RedisTop/Component/ConnectionPer.pm"} = <<'APP_REDISTOP_COMPONEN
   1;
 APP_REDISTOP_COMPONENT_CONNECTIONPER
 
-$fatpacked{"App/RedisTop/Component/DB.pm"} = <<'APP_REDISTOP_COMPONENT_DB';
+$fatpacked{"App/RedisTop/Component/DB.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_DB';
   package App::RedisTop::Component::DB;
   use base 'App::RedisTop::Component';
   sub new {
@@ -330,7 +332,53 @@ $fatpacked{"App/RedisTop/Component/DB.pm"} = <<'APP_REDISTOP_COMPONENT_DB';
   1;
 APP_REDISTOP_COMPONENT_DB
 
-$fatpacked{"App/RedisTop/Component/Memory.pm"} = <<'APP_REDISTOP_COMPONENT_MEMORY';
+$fatpacked{"App/RedisTop/Component/Epoch.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_EPOCH';
+  package App::RedisTop::Component::Epoch;
+  use base 'App::RedisTop::Component';
+  use POSIX qw(strftime);
+  
+  sub new {
+      my $class = shift;
+      my $self = bless {
+          group => 'date/time',
+          items => [
+              { name => 'epoch', callback => sub { return strftime("%s", localtime()) }, },
+          ],
+          width => 10,
+          @_,
+      }, $class;
+  }
+  
+  1;
+APP_REDISTOP_COMPONENT_EPOCH
+
+$fatpacked{"App/RedisTop/Component/Instance.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_INSTANCE';
+  package App::RedisTop::Component::Instance;
+  use base 'App::RedisTop::Component';
+  use POSIX qw(strftime);
+  
+  sub new {
+      my $class = shift;
+      my $self = bless {
+          group => 'instance',
+          items => [
+              {
+                  name => 'instance',
+                  callback => sub {
+                      my ($redis_instance, $redis_config) = @_;
+                      return $redis_instance;
+                  },
+              },
+          ],
+          width => 15,
+          @_,
+      }, $class;
+  }
+  
+  1;
+APP_REDISTOP_COMPONENT_INSTANCE
+
+$fatpacked{"App/RedisTop/Component/Memory.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_MEMORY';
   package App::RedisTop::Component::Memory;
   use base 'App::RedisTop::Component';
   sub new {
@@ -352,7 +400,7 @@ $fatpacked{"App/RedisTop/Component/Memory.pm"} = <<'APP_REDISTOP_COMPONENT_MEMOR
   1;
 APP_REDISTOP_COMPONENT_MEMORY
 
-$fatpacked{"App/RedisTop/Component/MemoryPer.pm"} = <<'APP_REDISTOP_COMPONENT_MEMORYPER';
+$fatpacked{"App/RedisTop/Component/MemoryPer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_MEMORYPER';
   package App::RedisTop::Component::MemoryPer;
   use base 'App::RedisTop::Component';
   sub new {
@@ -371,7 +419,7 @@ $fatpacked{"App/RedisTop/Component/MemoryPer.pm"} = <<'APP_REDISTOP_COMPONENT_ME
   1;
 APP_REDISTOP_COMPONENT_MEMORYPER
 
-$fatpacked{"App/RedisTop/Component/Save.pm"} = <<'APP_REDISTOP_COMPONENT_SAVE';
+$fatpacked{"App/RedisTop/Component/Save.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_SAVE';
   package App::RedisTop::Component::Save;
   use base 'App::RedisTop::Component';
   sub new {
@@ -400,7 +448,7 @@ $fatpacked{"App/RedisTop/Component/Save.pm"} = <<'APP_REDISTOP_COMPONENT_SAVE';
   1;
 APP_REDISTOP_COMPONENT_SAVE
 
-$fatpacked{"App/RedisTop/Component/Slowlog.pm"} = <<'APP_REDISTOP_COMPONENT_SLOWLOG';
+$fatpacked{"App/RedisTop/Component/Slowlog.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_SLOWLOG';
   package App::RedisTop::Component::Slowlog;
   use base 'App::RedisTop::Component';
   sub new {
@@ -421,7 +469,27 @@ $fatpacked{"App/RedisTop/Component/Slowlog.pm"} = <<'APP_REDISTOP_COMPONENT_SLOW
   1;
 APP_REDISTOP_COMPONENT_SLOWLOG
 
-$fatpacked{"App/RedisTop/Perform.pm"} = <<'APP_REDISTOP_PERFORM';
+$fatpacked{"App/RedisTop/Component/Time.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_COMPONENT_TIME';
+  package App::RedisTop::Component::Time;
+  use base 'App::RedisTop::Component';
+  use POSIX qw(strftime);
+  
+  sub new {
+      my $class = shift;
+      my $self = bless {
+          group => 'date/time',
+          items => [
+              { name => 'time', data => sub { strftime("%m/%d %H:%M:%S", localtime()) }, },
+          ],
+          width => 15,
+          @_,
+      }, $class;
+  }
+  
+  1;
+APP_REDISTOP_COMPONENT_TIME
+
+$fatpacked{"App/RedisTop/Perform.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_PERFORM';
   package App::RedisTop::Perform;
   use Term::ANSIColor qw/colored/;
   use List::Util qw/max/;
@@ -577,7 +645,171 @@ $fatpacked{"App/RedisTop/Perform.pm"} = <<'APP_REDISTOP_PERFORM';
   1;
 APP_REDISTOP_PERFORM
 
-$fatpacked{"App/RedisTop/Redis.pm"} = <<'APP_REDISTOP_REDIS';
+$fatpacked{"App/RedisTop/PerformStat.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_PERFORMSTAT';
+  package App::RedisTop::PerformStat;
+  use Term::ANSIColor qw/colored/;
+  use List::Util qw/max/;
+  use App::RedisTop::Redis;
+  
+  my $version = eval {
+      require App::RedisTop;
+      $App::RedisTop::VERSION;
+  };
+  if($@) { $version = '?' }
+  
+  sub new {
+      my $class = shift;
+  
+      chomp(my $rows = qx{tput lines});
+      $rows ||= 24;
+  
+      my $self = bless {
+          groups     => [],
+          instances  => [],
+          width      => 20,
+          summary    => {},
+          prev_stats => {},
+          displayed  => 0,
+          rows       => $rows,
+          @_,
+      }, $class;
+      my $max_len = max (map { length($_) } @{$self->{instances}});
+      $self->{width} = $max_len;
+      $self;
+  }
+  
+  sub separator { colored("|", "blue") }
+  
+  sub build_title {
+      return ();
+  }
+  
+  sub build_header {
+      my ($self) = @_;
+      my $out_str = sprintf("%s ", ' ' x $self->{width});
+      for my $group (@{$self->{groups}}) {
+          $out_str .= $group->header;
+      }
+      return ("$out_str\n");
+  }
+  
+  sub build_sub_header {
+      my ($self) = @_;
+      my $format = "%" . $self->{width} . "s%s";
+      my $out_str = colored(sprintf($format, 'INSTANCE', $self->separator), "bold");
+      for my $group (@{$self->{groups}}) {
+          $out_str .= $group->sub_header;
+      }
+      return ("$out_str\n");
+  }
+  
+  sub build_line {
+      my ($self, $spt) = @_;
+      my $out_str = colored(sprintf("%s ", $spt x $self->{width}), "blue");
+      for my $group (@{$self->{groups}}) {
+          $out_str .= $group->line($spt);
+      }
+      return ("$out_str\n");
+  }
+  
+  sub build_body {
+      my ($self, $instance, $stats, $prev_stats, $redis_config) = @_;
+      my $format = "%" . $self->{width} . "s%s";
+      my $out_str = sprintf($format, $instance, $self->separator);
+      for my $group (@{$self->{groups}}) {
+          $group->redis_config($redis_config);
+          $out_str .= $group->body($stats, $prev_stats);
+  
+          # stash total count
+          my @values = $group->stat_values($stats, $prev_stats);
+          my $key    = $group->{group};
+          my $total_values = $self->{summary}->{$key} || [];
+          for (my $i = 0; $i < scalar @values; $i++){
+              $total_values->[$i] ||= 0;
+              $total_values->[$i] += $values[$i];
+          }
+          $self->{summary}->{$key} = $total_values;
+      }
+      return ("$out_str\n");
+  }
+  
+  sub build_average {
+      my ($self) = @_;
+      my $instance_count = scalar @{$self->{instances}};
+  
+      my $format = "%" . $self->{width} . "s%s";
+      my $out_str = colored(sprintf($format, 'AVERAGE', $self->separator), "bold");
+      for my $group (@{$self->{groups}}) {
+          my $key   = $group->{group};
+          $out_str .= $group->average($self->{summary}->{$key}, $instance_count);
+      }
+      return ("$out_str\n");
+  }
+  
+  sub build_total {
+      my ($self) = @_;
+      my $format = "%" . $self->{width} . "s%s";
+      my $out_str = colored(sprintf($format, 'TOTAL', $self->separator), "bold");
+      for my $group (@{$self->{groups}}) {
+          my $key   = $group->{group};
+          $out_str .= $group->total($self->{summary}->{$key});
+      }
+      return ("$out_str\n");
+  }
+  
+  sub run {
+      my ($self) = @_;
+  
+      # init total
+      $self->{summary} = {};
+  
+      my @lines;
+      if ($self->{displayed} == 0) {
+          # build header
+          push @lines, $self->build_title;
+          push @lines, $self->build_header;
+          push @lines, $self->build_sub_header;
+          push @lines, $self->build_line('-');
+      }
+  
+      # instances loop
+      foreach my $instance (@{$self->{instances}}) {
+          my ($host, $port) = split(/:/, $instance);
+  
+          my $redis   = App::RedisTop::Redis->new(host => $host, port => $port);
+          my $config  = $redis->config();
+          my $stats   = $redis->info();
+          my $slowlog = $redis->slowlog();
+          # add slowlog len into stats
+          $stats->{slowlog_len} = $slowlog;
+  
+          push @lines, $self->build_body(
+              $instance,
+              $stats,
+              $self->{prev_stats}->{$instance} || {},
+              $config,
+          );
+          $self->{prev_stats}->{$instance} = $stats;
+      }
+  
+      if ($self->{displayed} == 0) {
+          # average
+          push @lines, $self->build_average();
+          # total
+          push @lines, $self->build_total();
+      }
+  
+      print join('', @lines);
+      $self->{displayed} += scalar(@lines);
+      if ($self->{displayed} >= $self->{rows}) {
+          $self->{displayed} = 0;
+      }
+  }
+  
+  1;
+APP_REDISTOP_PERFORMSTAT
+
+$fatpacked{"App/RedisTop/Redis.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_REDISTOP_REDIS';
   package App::RedisTop::Redis;
   
   use strict;
@@ -711,24 +943,37 @@ APP_REDISTOP_REDIS
 
 s/^  //mg for values %fatpacked;
 
-unshift @INC, sub {
-  if (my $fat = $fatpacked{$_[1]}) {
-    if ($] < 5.008) {
-      return sub {
-        return 0 unless length $fat;
-        $fat =~ s/^([^\n]*\n?)//;
-        $_ = $1;
-        return 1;
-      };
-    }
-    open my $fh, '<', \$fat
-      or die "FatPacker error loading $_[1] (could be a perl installation issue?)";
-    return $fh;
-  }
-  return
-};
+my $class = 'FatPacked::'.(0+\%fatpacked);
+no strict 'refs';
+*{"${class}::files"} = sub { keys %{$_[0]} };
 
-} # END OF FATPACK CODE
+if ($] < 5.008) {
+  *{"${class}::INC"} = sub {
+     if (my $fat = $_[0]{$_[1]}) {
+       return sub {
+         return 0 unless length $fat;
+         $fat =~ s/^([^\n]*\n?)//;
+         $_ = $1;
+         return 1;
+       };
+     }
+     return;
+  };
+}
+
+else {
+  *{"${class}::INC"} = sub {
+    if (my $fat = $_[0]{$_[1]}) {
+      open my $fh, '<', \$fat
+        or die "FatPacker error loading $_[1] (could be a perl installation issue?)";
+      return $fh;
+    }
+    return;
+  };
+}
+
+unshift @INC, bless \%fatpacked, $class;
+  } # END OF FATPACK CODE
 
 #!perl
 
@@ -738,7 +983,7 @@ use IO::Socket;
 use Getopt::Long qw(:config posix_default no_ignore_case gnu_compat bundling);
 use Pod::Usage qw(pod2usage);
 
-use App::RedisTop::Perform;
+use App::RedisTop::Component::Time;
 use App::RedisTop::Component::CPU;
 use App::RedisTop::Component::Memory;
 use App::RedisTop::Component::MemoryPer;
@@ -755,21 +1000,23 @@ use App::RedisTop::Component::DB;
 package main;
 
 my %groups = (
-    cpu       => { class => App::RedisTop::Component::CPU->new(),           sort => 1, },
-    memory    => { class => App::RedisTop::Component::Memory->new(),        sort => 2, },
-    memoryper => { class => App::RedisTop::Component::MemoryPer->new(),     sort => 3, },
-    conn      => { class => App::RedisTop::Component::Connection->new(),    sort => 4, },
-    connper   => { class => App::RedisTop::Component::ConnectionPer->new(), sort => 5, },
-    save      => { class => App::RedisTop::Component::Save->new(),          sort => 6, },
-    command   => { class => App::RedisTop::Component::Command->new(),       sort => 7, },
-    slowlog   => { class => App::RedisTop::Component::Slowlog->new(),       sort => 8, },
-    db        => { class => App::RedisTop::Component::DB->new(dbid => 0),   sort => 9, },
+    time      => { class => App::RedisTop::Component::Time->new(),          sort => 1, },
+    cpu       => { class => App::RedisTop::Component::CPU->new(),           sort => 2, },
+    memory    => { class => App::RedisTop::Component::Memory->new(),        sort => 3, },
+    memoryper => { class => App::RedisTop::Component::MemoryPer->new(),     sort => 4, },
+    conn      => { class => App::RedisTop::Component::Connection->new(),    sort => 5, },
+    connper   => { class => App::RedisTop::Component::ConnectionPer->new(), sort => 6, },
+    save      => { class => App::RedisTop::Component::Save->new(),          sort => 7, },
+    command   => { class => App::RedisTop::Component::Command->new(),       sort => 8, },
+    slowlog   => { class => App::RedisTop::Component::Slowlog->new(),       sort => 9, },
+    db        => { class => App::RedisTop::Component::DB->new(dbid => 0),   sort => 10, },
 );
 
 sub main {
     my $opt = +{};
 
     GetOptions(
+        't|time'        => \$opt->{time},
         'c|cpu'         => \$opt->{cpu},
         'M|memory'      => \$opt->{memory},
         'm|memoryper'   => \$opt->{memoryper},
@@ -802,10 +1049,21 @@ sub main {
         push @sp_groups, $groups{$_}->{class} for qw/cpu memory conn save command db/;
     }
 
-    my $perform = App::RedisTop::Perform->new(
-        groups    => \@sp_groups,
-        instances => \@instances,
-    );
+    my $perform = do {
+        if ($0 =~ /-stat/) {
+            require App::RedisTop::PerformStat;
+            App::RedisTop::PerformStat->new(
+                groups    => \@sp_groups,
+                instances => \@instances,
+            );
+        } else {
+            require App::RedisTop::Perform;
+            App::RedisTop::Perform->new(
+                groups    => \@sp_groups,
+                instances => \@instances,
+            );
+        }
+    };
     while(1) {
         $perform->run;
         sleep($sleep);
@@ -827,6 +1085,7 @@ Redis resource statistics tool.
 =head1 USAGE
 
 redis-top [options]
+redis-stat [options]
 
 =head2 Example
 
@@ -836,7 +1095,9 @@ redis-top [options]
 
 =item redis-top --sleep 1 --nocolor --cpu --memory --db
 
-=item redis-top -cMnsCdmol  # full
+=item redis-top --cpu --memory --conn --save --command --db  # default
+
+=item redis-top -cMnsCdmolt  # full
 
 =back
 
@@ -881,6 +1142,10 @@ enable slowlog stats
 =item -d,--db
 
 enable db stats (default:db0 stats)
+
+=item -t,--time
+
+enable time output
 
 =back
 
