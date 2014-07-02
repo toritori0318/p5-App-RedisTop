@@ -6,7 +6,6 @@ use IO::Socket;
 use Getopt::Long qw(:config posix_default no_ignore_case gnu_compat bundling);
 use Pod::Usage qw(pod2usage);
 
-use App::RedisTop::Perform;
 use App::RedisTop::Component::CPU;
 use App::RedisTop::Component::Memory;
 use App::RedisTop::Component::MemoryPer;
@@ -70,10 +69,21 @@ sub main {
         push @sp_groups, $groups{$_}->{class} for qw/cpu memory conn save command db/;
     }
 
-    my $perform = App::RedisTop::Perform->new(
-        groups    => \@sp_groups,
-        instances => \@instances,
-    );
+    my $perform = do {
+        if ($0 =~ /-stat/) {
+            require App::RedisTop::PerformStat;
+            App::RedisTop::PerformStat->new(
+                groups    => \@sp_groups,
+                instances => \@instances,
+            );
+        } else {
+            require App::RedisTop::Perform;
+            App::RedisTop::Perform->new(
+                groups    => \@sp_groups,
+                instances => \@instances,
+            );
+        }
+    };
     while(1) {
         $perform->run;
         sleep($sleep);

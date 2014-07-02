@@ -12,5 +12,5 @@ WriteMakefile(
     },
     MIN_PERL_VERSION => '5.008001',
     LICENSE => 'perl',
-    EXE_FILES => [ 'bin/redis-top' ],
+    EXE_FILES => [ 'bin/redis-top', 'bin/redis-stat' ],
 );
