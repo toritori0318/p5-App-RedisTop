@@ -108,6 +108,7 @@ Redis resource statistics tool.
 =head1 USAGE
 
 redis-top [options]
+redis-stat [options]
 
 =head2 Example
 
@@ -117,7 +118,9 @@ redis-top [options]
 
 =item redis-top --sleep 1 --nocolor --cpu --memory --db
 
-=item redis-top -cMnsCdmol  # full
+=item redis-top --cpu --memory --conn --save --command --db  # default
+
+=item redis-top -cMnsCdmolt  # full
 
 =back
 

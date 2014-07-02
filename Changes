@@ -1,6 +1,8 @@
 Revision history for Perl extension App::RedisTop.
 
-0.03  2013/07/17
+0.03  2014/07/02
+  - Add Time group
+  - Add redis-stat command (@hirose31)
   - Add Slowlog group
   - Add UsedMemory / MaxMemory
   - Add Connection / MaxClient

@@ -21,11 +21,10 @@ To install this module type the following:
    make test
    make install
 
-DEPENDENCIES
+Update Fatpack
 
-This module requires these other modules and libraries:
-
-  blah blah blah
+   fatpack.sh lib > redis-top-pack
+   cat bin/redis-top-pack
 
 COPYRIGHT AND LICENCE
 

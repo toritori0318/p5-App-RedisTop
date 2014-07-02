@@ -9,6 +9,8 @@ or
 
     curl -L -o redis-top https://raw.github.com/toritori0318/p5-App-RedisTop/master/redis-top-pack
     perl redis-top
+    # setup redis-stat
+    ln -s redis-top redis-stat
 
 ## ScreenShot
 
@@ -18,10 +20,12 @@ or
 
     Usage:
         redis-top [options]
+        redis-stat [options]
 
       Example:
         redis-top -i 127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382
         redis-top --sleep 1 --nocolor --cpu --memory --db
+        redis-top --cpu --memory --conn --save --command --db  # default
         redis-top -cMnsCdmol # full
 
     Options:
@@ -52,6 +56,9 @@ or
 
         -d,--db
             enable db stats (default:db0 stats)
+
+        -t,--time
+            enable time output
 
       Global Options:
         --sleep
