@@ -7,7 +7,7 @@ redis-top - Redis resource statistics tool.
 
 or
 
-    curl -L -o redis-top https://raw.github.com/toritori0318/p5-App-RedisTop/master/redis-top-pack
+    curl -L -o redis-top https://raw.githubusercontent.com/toritori0318/p5-App-RedisTop/master/redis-top-pack
     perl redis-top
     # setup redis-stat
     ln -s redis-top redis-stat
@@ -26,7 +26,7 @@ or
         redis-top -i 127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382
         redis-top --sleep 1 --nocolor --cpu --memory --db
         redis-top --cpu --memory --conn --save --command --db  # default
-        redis-top -cMnsCdmol # full
+        redis-top -cMnsCdmolt # full
 
     Options:
       Group Options:
